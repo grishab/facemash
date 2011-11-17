@@ -5,12 +5,10 @@ from django.conf.urls.defaults import *
 # admin.autodiscover()
 
 urlpatterns = patterns('',
-    # Example:
-    # (r'^facemash/', include('facemash.foo.urls')),
-
-    # Uncomment the admin/doc line below to enable admin documentation:
-    # (r'^admin/doc/', include('django.contrib.admindocs.urls')),
-
-    # Uncomment the next line to enable the admin:
-    # (r'^admin/', include(admin.site.urls)),
+    (r'^index/$','mash.views.index'),
+    (r'^chose/$','mash.views.chose'),
+    (r'^chose/(?P<id>\d+)/$','mash.views.getchose'),
+    (r'^res/(?P<sid>\d+)/(?P<eid>\d+)/$','mash.views.getres'),
+    (r'^start/$','mash.views.start'),
+    (r'^media/(?P<path>.*)$', 'django.views.static.serve', {'document_root':'./media/'}),    
 )
