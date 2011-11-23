@@ -1,1 +1,1 @@
-mysql -u root -p 123
+mysql -u root -p 122
