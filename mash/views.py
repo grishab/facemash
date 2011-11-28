@@ -7,7 +7,7 @@ from mash.models import User
 import json, urllib, urllib2, random, hashlib, time, re, redis
 
 chose_db = redis.StrictRedis(host='localhost', port=6379, db=0)
-profile_db = redis.StrictRedis(host='localhost', port=6379, db=1)   
+profile_db = redis.StrictRedis(host='localhost', port=6379, db=1)
 API_VERSION='3.0'
 
 def vktime():
@@ -19,7 +19,7 @@ def vktime():
     md5.update('method=getServerTime')
     md5.update('v=2.0')
     md5.update(secret)
-    url="http://api.vkontakte.ru/api.php?api_id=%s&format=JSON&method=getServerTime&v=2.0&sig=%s" %(api_id, md5.hexdigest()) 
+    url="http://api.vkontakte.ru/api.php?api_id=%s&format=JSON&method=getServerTime&v=2.0&sig=%s" %(api_id, md5.hexdigest())
     r = urllib2.urlopen(url).read()
     m = re.match('\{"response":([0-9]+)\}', r)
     if (m):
@@ -67,7 +67,7 @@ class VKReq():
     def get(self, method_params):
         """return response (dict)"""
         p = self._params(method_params)
-        data = urllib.urlencode(p)  
+        data = urllib.urlencode(p)
         return simplejson.loads(urllib2.urlopen(urllib2.Request('http://api.vkontakte.ru/api.php', data)).read())
 
 def start(request):
@@ -78,40 +78,48 @@ def start(request):
     return HttpResponse('redis ready')
 
 def index(request):
-    VK = VKReq('2674503', 'Plpau4O1Uu7hItMNWWau')
-    friends_req = VK.get({'uid': 56799255, 'count': 500, 'fields': 'uid,first_name,last_name,photo,photo_big', 'method': 'friends.get'})
-    User.objects.all()
-    for user in friends_req['response']:
-        profile_db.set(user['uid'],simplejson.dumps(user))
-        muser = User(
-                     uid = user['uid'], 
-                     last_name = unicode(user['last_name']),
-                     first_name = unicode(user['first_name']),
-                     photo = user['photo'],
-                     photo_big = user['photo_big']
-                 )
-        muser.save()
-    
+    viewer_id = request.GET.get('viewer_id','')
+    vk_auth_key = request.GET.get('auth_key','')
+    verify_auth = str('2674503')+'_'+str(viewer_id)+'_'+str('Plpau4O1Uu7hItMNWWau')
+    auth_key = hashlib.md5(verify_auth).hexdigest()
+    if (auth_key == vk_auth_key):
+        request.session['uid'] = viewer_id
+        VK = VKReq('2674503', 'Plpau4O1Uu7hItMNWWau')
+
+        friends_req = VK.get({'uid': viewer_id, 'count': 500, 'fields': 'uid,first_name,last_name,photo,photo_big', 'method': 'friends.get'})
+        User.objects.all()
+        for user in friends_req['response']:
+            profile_db.set(user['uid'],simplejson.dumps(user))
+            muser = User(
+                         uid = user['uid'],
+                         last_name = unicode(user['last_name']),
+                         first_name = unicode(user['first_name']),
+                         photo = user['photo'],
+                         photo_big = user['photo_big']
+                     )
+            if(User.objects.filter(uid=user['uid']).count()==0):
+                muser.save()
+
+
     template = loader.get_template('index.html')
     c = Context()
     return HttpResponse(template.render(c))
 
 def chose(request):
     set = []
-    for m in [0,2]:
+    for m in range(3):
         rand = profile_db.randomkey()
         chose = profile_db.get(rand)
         unload = simplejson.loads(chose)
         set.append(unload)
-    User.objects.all()
-    ans = User.objects.filter(id=227)
-    return HttpResponse(ans)#simplejson.dumps(set))
+    print request.session['uid']
+    return HttpResponse(simplejson.dumps(set))
 
 def getchose(request,id):
     chose_db.zincrby('rank',id,1)
     return HttpResponse('ok')
 
 def getres(request,sid,eid):
-    answer = chose_db.zrevrange('rank',sid,eid)    
+    answer = chose_db.zrevrange('rank',sid,eid)
     winner = profile_db.get(answer[0])
     return HttpResponse(winner)

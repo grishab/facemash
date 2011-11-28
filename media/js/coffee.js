@@ -22,8 +22,12 @@
         user = data[_i];
         li = $('<li></li>');
         div = $('<div></div>');
-        img = $('<img width="247" src="' + user.photo_big + '" />');
-        li.append(div.append(img));
+        div.imgresizer({
+        	width: 233,
+        	height: 317,
+        	img: user.photo_big,
+        });
+        li.append(div);
         li.data('uid', user.uid);
         li.click(function(event) {
           return _this.choseUser(event);

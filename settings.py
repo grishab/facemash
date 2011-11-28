@@ -76,7 +76,7 @@ MIDDLEWARE_CLASSES = (
     'django.contrib.messages.middleware.MessageMiddleware',
 )
 
-ROOT_URLCONF = 'facemash.urls'
+ROOT_URLCONF = 'urls'
 
 TEMPLATE_DIRS = (
      '/home/grisha/proj/facemash/templates/'
@@ -97,3 +97,4 @@ INSTALLED_APPS = (
     # Uncomment the next line to enable admin documentation:
     # 'django.contrib.admindocs',
 )
+FORCE_SCRIPT_NAME = ''

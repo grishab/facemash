@@ -1,9 +1,9 @@
 class Loader
   constructor: ->
-  
+
   apply: ->
       $.getJSON('/chose', @renderChose)
-    
+
   renderChose: (data) =>
       parent = $('#photo_chose')
       parent.empty()
@@ -21,9 +21,9 @@ class Loader
       uid = $(event.currentTarget).data('uid')
       $.get('/chose/'+uid)
       @apply()
-      
+
 window.loader = new Loader()
 
 $(document).ready(->
-    loader.apply()  
+    loader.apply()
 )
